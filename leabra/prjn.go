@@ -439,6 +439,40 @@ func (pj *Prjn) InitWts() {
 	pj.LeabraPrj.InitGInc()
 }
 
+// DZ added
+func (pj *Prjn) InitSdEffWt() {
+	//fmt.Println("initsdeffwt happened")
+	for si := range pj.Syns {
+		sy := &pj.Syns[si]
+		sy.Effwt = sy.Wt
+		//fmt.Println(sy.Wt, sy.Effwt)
+		sy.Cai = 0.0
+		sy.Rec = 0.002
+		sy.CaDec = 0.25
+		sy.CaInc = 0.6
+		sy.SdCaThr = 0.0
+		sy.SdCaGain = 3.0
+		sy.SdCaThrRescale = sy.SdCaGain / (1.0 - sy.SdCaThr)
+	}
+}
+
+// DS added - TermSdEffWt is used to reset all sd vars when BackToWake in order to ensure EffWt = Wt again
+func (pj *Prjn) TermSdEffWt() {
+	//fmt.Println("initsdeffwt happened")
+	for si := range pj.Syns {
+		sy := &pj.Syns[si]
+		sy.Effwt = sy.Wt
+		//fmt.Println(sy.Wt, sy.Effwt)
+		sy.Cai = 0.0
+		sy.Rec = 0.0
+		sy.CaDec = 0.0
+		sy.CaInc = 0.0
+		sy.SdCaThr = 0.0
+		sy.SdCaGain = 0.0
+		sy.SdCaThrRescale = sy.SdCaGain / (1.0 - sy.SdCaThr)
+	}
+}
+
 // InitWtSym initializes weight symmetry -- is given the reciprocal projection where
 // the Send and Recv layers are reversed.
 func (pj *Prjn) InitWtSym(rpjp LeabraPrjn) {
@@ -481,6 +515,33 @@ func (pj *Prjn) InitGInc() {
 //////////////////////////////////////////////////////////////////////////////////////
 //  Act methods
 
+// Added by DZ
+// CaUpdt calculated the Cai for each synapses.
+func (pj *Prjn) CaUpdt(si int, preSynAct float32) {
+	nc := pj.SConN[si]
+	st := pj.SConIdxSt[si]
+	counter := make([]int32, nc)
+	for ci := range counter {
+		ri := pj.SConIdx[st+int32(ci)]
+		rn := &pj.Recv.(LeabraLayer).AsLeabra().Neurons[ri]
+		sy := &pj.Syns[int32(ci)+st]
+		sy.CaUpdt(rn.Act, preSynAct)
+	}
+}
+
+// Added by DZ
+func (pj *Prjn) CalSynDep(si int) {
+	//fmt.Println("Step into the real CalSynDep")
+	nc := pj.SConN[si]
+	st := pj.SConIdxSt[si]
+	counter := make([]int32, nc)
+	for ci := range counter {
+		sy := &pj.Syns[int32(ci)+st]
+		sy.EffwtUpdt()
+		//fmt.Println(sy.Wt - sy.Effwt)
+	}
+}
+
 // SendGDelta sends the delta-activation from sending neuron index si,
 // to integrate synaptic conductances on receivers
 func (pj *Prjn) SendGDelta(si int, delta float32) {
@@ -491,7 +552,8 @@ func (pj *Prjn) SendGDelta(si int, delta float32) {
 	scons := pj.SConIdx[st : st+nc]
 	for ci := range syns {
 		ri := scons[ci]
-		pj.GInc[ri] += scdel * syns[ci].Wt
+		// DS note: Wt changed to Effwt here. This allows Syn dep to take effect during sleep, but otherwise should let Activations be based on Wt (since Effwt = Wt prior to InitSdEffWt)
+		pj.GInc[ri] += scdel * syns[ci].Effwt // Checking if just replacing this with Effwt will do the trick for acts. It Does!
 	}
 }
 

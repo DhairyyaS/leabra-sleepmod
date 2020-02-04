@@ -17,9 +17,20 @@ type Synapse struct {
 	Norm   float32 `desc:"DWt normalization factor -- reset to max of abs value of DWt, decays slowly down over time -- serves as an estimate of variance in weight changes over time"`
 	Moment float32 `desc:"momentum -- time-integrated DWt changes, to accumulate a consistent direction of weight change and cancel out dithering contradictory changes"`
 	Scale  float32 `desc:"scaling parameter for this connection: effective weight value is scaled by this factor -- useful for topographic connectivity patterns e.g., to enforce more distant connections to always be lower in magnitude than closer connections.  Value defaults to 1 (cannot be exactly 0 -- otherwise is automatically reset to 1 -- use a very small number to approximate 0).  Typically set by using the prjn.Pattern Weights() values where appropriate"`
+
+	// DS: Sleep related var additions
+	SRAvgDp        float32 `desc:"Synaptic Depression scaling variable based on sender-receiver neuron average activation (represented by the inverse of sum of co-activation)"`
+	Cai            float32 `desc:"cai intacelluarl calcium. Default to be 0."`
+	Rec            float32 `desc:"// #DEF_0.002 rate of recovery from depression"`
+	Effwt          float32 `desc:"Maybe it is needed. I don't know yet. Default to be the same as Wt."`
+	CaInc          float32 `desc:"#DEF_0.2 time constant for increases in Ca_i (from NMDA etc currents) -- default base value is .01 per cycle -- multiply by network->ct_learn.syndep_int to get this value (default = 20)"`
+	CaDec          float32 `desc:"#DEF_0.2 time constant for decreases in Ca_i (from Ca pumps pushing Ca back out into the synapse) -- default base value is .01 per cycle -- multiply by network->ct_learn.syndep_int to get this value (default = 20)"`
+	SdCaThr        float32 `desc:"#DEF_0.2 synaptic depression ca threshold: only when ca_i has increased by this amount (thus synaptic ca depleted) does it affect firing rates and thus synaptic depression"`
+	SdCaGain       float32 `desc:"#DEF_0.3 multiplier on cai value for computing synaptic depression -- modulates overall level of depression independent of rate parameters"`
+	SdCaThrRescale float32 `desc:"#READ_ONLY rescaling factor taking into account sd_ca_gain and sd_ca_thr (= sd_ca_gain/(1 - sd_ca_thr))"`
 }
 
-var SynapseVars = []string{"Wt", "LWt", "DWt", "Norm", "Moment", "Scale"}
+var SynapseVars = []string{"Wt", "LWt", "DWt", "Norm", "Moment", "Scale", "SRAvgDp", "Cai", "Effwt"} //, "CaInc", "CaDec", "SdCaThr", "SdCaGain", "SdCaThrRescale"}
 
 var SynapseVarProps = map[string]string{
 	"DWt":    `auto-scale:"+"`,
@@ -78,4 +89,31 @@ func (sy *Synapse) SetVarByName(varNm string, val float32) error {
 	}
 	sy.SetVarByIndex(i, val)
 	return nil
+}
+
+// Added by DZ: SynDep calculated at each synapse
+func (sy *Synapse) SynDep() float32 {
+	cao_thr := float32(1.0)
+	if sy.Cai > sy.SdCaThr {
+		cao_thr = 1.0 - (sy.SdCaThrRescale * (sy.Cai - sy.SdCaThr))
+	}
+	return cao_thr * cao_thr
+}
+
+// Added by DZ: CaUpdt calculated the Cai for each synapses
+func (sy *Synapse) CaUpdt(ru_act float32, su_act float32) {
+	drive := ru_act * su_act * sy.Effwt
+	sy.Cai += (sy.CaInc * (1.0 - sy.Cai) * drive) - (sy.CaDec * sy.Cai)
+}
+
+func (sy *Synapse) EffwtUpdt() {
+	sy.Effwt = sy.Wt * sy.SynDep()
+	//fmt.Println(sy.Wt - sy.Effwt)
+	// Final checking if the Effwt is out of bounds
+	if sy.Effwt > sy.Wt {
+		sy.Effwt = sy.Wt
+	}
+	if sy.Effwt < 0.0 {
+		sy.Effwt = 0.0
+	}
 }

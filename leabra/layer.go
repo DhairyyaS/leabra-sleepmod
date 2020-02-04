@@ -24,6 +24,7 @@ import (
 	"github.com/goki/ki/ints"
 	"github.com/goki/ki/ki"
 	"github.com/goki/ki/kit"
+	"gonum.org/v1/gonum/stat"
 )
 
 // leabra.Layer has parameters for running a basic rate-coded Leabra layer
@@ -35,6 +36,9 @@ type Layer struct {
 	Neurons []Neuron        `desc:"slice of neurons for this layer -- flat list of len = Shp.Len(). You must iterate over index and use pointer to modify values."`
 	Pools   []Pool          `desc:"inhibition and other pooled, aggregate state variables -- flat list has at least of 1 for layer, and one for each sub-pool (unit group) if shape supports that (4D).  You must iterate over index and use pointer to modify values."`
 	CosDiff CosDiffStats    `desc:"cosine difference between ActM, ActP stats"`
+
+	// DZ added
+	Sim float64 `desc:"Similarity between current cycle and previous cycle."`
 }
 
 var KiT_Layer = kit.Types.AddType(&Layer{}, LayerProps)
@@ -490,6 +494,76 @@ func (ly *Layer) InitWts() {
 	ly.LeabraLay.InitActAvg()
 	ly.LeabraLay.InitActs()
 	ly.CosDiff.Init()
+}
+
+// DZ Added
+// InitSdEffWt initializes the Effwt and Cai for each synapse.
+func (ly *Layer) InitSdEffWt() {
+	for _, p := range ly.SndPrjns {
+		if p.IsOff() {
+			continue
+		}
+		p.(LeabraPrjn).InitSdEffWt()
+	}
+}
+
+// DS added
+// TermSdEffWt terminates Effwt so that Effwt = Wt when BackToWake
+func (ly *Layer) TermSdEffWt() {
+	for _, p := range ly.SndPrjns {
+		if p.IsOff() {
+			continue
+		}
+		p.(LeabraPrjn).TermSdEffWt()
+	}
+}
+
+// DZ added
+// CalSynDep computes the Sender-Receiver co-activation based synaptic depression, added by DH.
+func (ly *Layer) CalSynDep(ltime *Time) {
+	for ni := range ly.Neurons {
+		nrn := &ly.Neurons[ni]
+		if nrn.IsOff() {
+			continue
+		}
+		for _, sp := range ly.SndPrjns {
+			if sp.IsOff() {
+				continue
+			}
+			sp.(LeabraPrjn).CaUpdt(ni, nrn.Act)
+			sp.(LeabraPrjn).CalSynDep(ni)
+			//fmt.Println(ni)
+			//		sp.(LeabraPrjn).MonChge(ni)
+		}
+	}
+}
+
+// CaUpdt computes the Sender-Receiver co-activation based synaptic depression, added by DH.
+func (ly *Layer) CaUpdt(ltime *Time) {
+	for ni := range ly.Neurons {
+		nrn := &ly.Neurons[ni]
+		if nrn.IsOff() {
+			continue
+		}
+		for _, sp := range ly.SndPrjns {
+			if sp.IsOff() {
+				continue
+			}
+			sp.(LeabraPrjn).CaUpdt(ni, nrn.Act)
+		}
+	}
+}
+
+// DZ added
+// CalLaySim calculate the similarity of the PrevState and CurState of activation.
+func (ly *Layer) CalLaySim(ltime *Time) {
+	var PrevState []float64
+	var CurState []float64
+	for _, n := range ly.Neurons {
+		PrevState = append(PrevState, float64(n.ActSent))
+		CurState = append(CurState, float64(n.Act))
+	}
+	ly.Sim = stat.Correlation(PrevState, CurState, nil)
 }
 
 // InitActAvg initializes the running-average activation values that drive learning.

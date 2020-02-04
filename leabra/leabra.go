@@ -126,6 +126,17 @@ type LeabraLayer interface {
 	// LrateMult sets the new Lrate parameter for Prjns to LrateInit * mult.
 	// Useful for implementing learning rate schedules.
 	LrateMult(mult float32)
+
+	//DZ added
+	// CalLaySim calculate the similarity of the PrevState and CurState of activation.
+	CalLaySim(ltime *Time)
+
+	//DZ added
+	// CalSynDep compute Sender-Receiver co-activation based synaptic depression variable
+	CalSynDep(ltime *Time)
+
+	// DZ added
+	InitSdEffWt()
 }
 
 // LeabraPrjn defines the essential algorithmic API for Leabra, at the projection level.
@@ -172,4 +183,18 @@ type LeabraPrjn interface {
 	// LrateMult sets the new Lrate parameter for Prjns to LrateInit * mult.
 	// Useful for implementing learning rate schedules.
 	LrateMult(mult float32)
+
+	// DZ added
+	// CalSynDep compute Sender-Receiver co-activation based synaptic depression variable
+	CalSynDep(si int)
+
+	//DZ added
+	// CaUpdt compute Sender-Receiver co-activation based synaptic depression variable
+	CaUpdt(si int, preSynAct float32)
+
+	// DZ added
+	InitSdEffWt()
+
+	// DS added
+	TermSdEffWt()
 }

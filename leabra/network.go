@@ -69,6 +69,18 @@ func (nt *Network) InitWts() {
 	}
 }
 
+// DZ added
+// InitEffWt
+func (nt *Network) InitSdEffWt() {
+	// initEffwt
+	for _, ly := range nt.Layers {
+		if ly.IsOff() {
+			continue
+		}
+		ly.(LeabraLayer).InitSdEffWt()
+	}
+}
+
 // InitActs fully initializes activation state -- not automatically called
 func (nt *Network) InitActs() {
 	for _, ly := range nt.Layers {
@@ -159,6 +171,21 @@ func (nt *Network) Cycle(ltime *Time) {
 	nt.InhibFmGeAct(ltime)
 	nt.ActFmG(ltime)
 	nt.AvgMaxAct(ltime)
+	nt.CalSynDep(ltime) //Added Synaptic depression by DH.
+	nt.CalLaySim(ltime) //Added Layer similarity monitor by DH.
+}
+
+// Added by DZ
+// CalSynDep computes the synaptic depression variable.
+func (nt *Network) CalSynDep(ltime *Time) {
+	//nt.ThrLayFun(func(ly LeabraLayer) { ly.InitSdEffWt() }, "InitSdEffWt")
+	nt.ThrLayFun(func(ly LeabraLayer) { ly.CalSynDep(ltime) }, "CalSynDep")
+}
+
+// Added by DZ
+// CalLaySim calculate the similarity of the PrevState and CurState of activation.
+func (nt *Network) CalLaySim(ltime *Time) {
+	nt.ThrLayFun(func(ly LeabraLayer) { ly.CalLaySim(ltime) }, "CalLaySim")
 }
 
 // SendGeDelta sends change in activation since last sent, if above thresholds

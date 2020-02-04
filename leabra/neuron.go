@@ -66,9 +66,13 @@ type Neuron struct {
 	Spike  float32 `desc:"whether neuron has spiked or not (0 or 1), for discrete spiking neurons."`
 	ISI    float32 `desc:"current inter-spike-interval -- counts up since last spike.  Starts at -1 when initialized."`
 	ISIAvg float32 `desc:"average inter-spike-interval -- average time interval between spikes.  Starts at -1 when initialized, and goes to -2 after first spike, and is only valid after the second spike post-initialization."`
+
+	EffAct float32 `desc:"SLEEP rate-coded activation value reflecting final output of neuron communicated to other neurons, typically in range 0-1."`
 }
 
-var NeuronVars = []string{"Act", "ActLrn", "Ge", "Gi", "Gk", "Inet", "Vm", "Targ", "Ext", "AvgSS", "AvgS", "AvgM", "AvgL", "AvgLLrn", "AvgSLrn", "ActQ0", "ActQ1", "ActQ2", "ActM", "ActP", "ActDif", "ActDel", "ActAvg", "Noise", "GiSyn", "GiSelf", "ActSent", "GeRaw", "GeInc", "GiRaw", "GiInc", "GknaFast", "GknaMed", "GknaSlow", "Spike", "ISI", "ISIAvg"}
+var NeuronVars = []string{"Act", "ActLrn", "Ge", "Gi", "Gk", "Inet", "Vm", "Targ", "Ext", "AvgSS", "AvgS", "AvgM", "AvgL",
+	"AvgLLrn", "AvgSLrn", "ActQ0", "ActQ1", "ActQ2", "ActM", "ActP", "ActDif", "ActDel", "ActAvg", "Noise", "GiSyn", "GiSelf",
+	"ActSent", "GeRaw", "GeInc", "GiRaw", "GiInc", "GknaFast", "GknaMed", "GknaSlow", "Spike", "ISI", "ISIAvg", "EffAct"}
 
 var NeuronVarsMap map[string]int
 
