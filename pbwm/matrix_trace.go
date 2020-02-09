@@ -7,7 +7,7 @@ package pbwm
 import (
 	"github.com/chewxy/math32"
 	"github.com/emer/leabra/deep"
-	"github.com/emer/leabra/leabra"
+	"github.com/dhairyyas/leabra-sleepmod/leabra"
 )
 
 // TraceSyn holds extra synaptic state for trace projections

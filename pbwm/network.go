@@ -9,7 +9,7 @@ import (
 	"github.com/emer/emergent/prjn"
 	"github.com/emer/emergent/relpos"
 	"github.com/emer/leabra/deep"
-	"github.com/emer/leabra/leabra"
+	"github.com/dhairyyas/leabra-sleepmod/leabra"
 	"github.com/goki/ki/kit"
 )
 

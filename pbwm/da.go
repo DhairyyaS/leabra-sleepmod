@@ -8,7 +8,7 @@ import (
 	"log"
 
 	"github.com/emer/leabra/deep"
-	"github.com/emer/leabra/leabra"
+	"github.com/dhairyyas/leabra-sleepmod/leabra"
 	"github.com/goki/ki/kit"
 )
 

@@ -5,7 +5,7 @@
 package deep
 
 import (
-	"github.com/emer/leabra/leabra"
+	"github.com/dhairyyas/leabra-sleepmod/leabra"
 	"github.com/goki/ki/bitflag"
 )
 

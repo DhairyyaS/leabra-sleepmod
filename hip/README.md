@@ -1,6 +1,6 @@
 # Hippocampus
 
-[![GoDoc](https://godoc.org/github.com/emer/leabra/hip?status.svg)](https://godoc.org/github.com/emer/leabra/hip)
+[![GoDoc](https://godoc.org/github.com/dhairyyas/leabra-sleepmod/hip?status.svg)](https://godoc.org/github.com/dhairyyas/leabra-sleepmod/hip)
 
 Package hip provides special hippocampus algorithms for implementing the Theta-phase
 hippocampus model from Ketz, Morkonda, & O'Reilly (2013).
