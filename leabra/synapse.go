@@ -20,7 +20,7 @@ type Synapse struct {
 
 	// DS: Sleep related var additions
 	SRAvgDp        float32 `desc:"Synaptic Depression scaling variable based on sender-receiver neuron average activation (represented by the inverse of sum of co-activation)"`
-	Cai            float32 `desc:"cai intacelluarl calcium. Default to be 0."`
+	Cai            float32 `desc:"cai intacellular calcium. Default to be 0."`
 	Rec            float32 `desc:"// #DEF_0.002 rate of recovery from depression"`
 	Effwt          float32 `desc:"Maybe it is needed. I don't know yet. Default to be the same as Wt."`
 	CaInc          float32 `desc:"#DEF_0.2 time constant for increases in Ca_i (from NMDA etc currents) -- default base value is .01 per cycle -- multiply by network->ct_learn.syndep_int to get this value (default = 20)"`

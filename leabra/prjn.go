@@ -424,6 +424,9 @@ func (pj *Prjn) InitWtsSyn(syn *Synapse) {
 	syn.DWt = 0
 	syn.Norm = 0
 	syn.Moment = 0
+	//fmt.Println(syn.Wt, syn.Effwt)
+	syn.Effwt = syn.Wt // DS Added for Effwt = Wt during init
+	//fmt.Println(syn.Wt, syn.Effwt)
 }
 
 // InitWts initializes weight values according to Learn.WtInit params
@@ -449,9 +452,9 @@ func (pj *Prjn) InitSdEffWt() {
 		sy.Cai = 0.0
 		sy.Rec = 0.002
 		sy.CaDec = 0.25
-		sy.CaInc = 0.6
+		sy.CaInc = 0.4
 		sy.SdCaThr = 0.0
-		sy.SdCaGain = 3.0
+		sy.SdCaGain = 3
 		sy.SdCaThrRescale = sy.SdCaGain / (1.0 - sy.SdCaThr)
 	}
 }
@@ -537,7 +540,7 @@ func (pj *Prjn) CalSynDep(si int) {
 	counter := make([]int32, nc)
 	for ci := range counter {
 		sy := &pj.Syns[int32(ci)+st]
-		sy.EffwtUpdt()
+		sy.EffwtUpdt() // testing
 		//fmt.Println(sy.Wt - sy.Effwt)
 	}
 }

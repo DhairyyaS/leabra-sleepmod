@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -563,7 +564,17 @@ func (ly *Layer) CalLaySim(ltime *Time) {
 		PrevState = append(PrevState, float64(n.ActSent))
 		CurState = append(CurState, float64(n.Act))
 	}
-	ly.Sim = stat.Correlation(PrevState, CurState, nil)
+
+	sim := stat.Correlation(PrevState, CurState, nil)
+
+	// DS: check if lay sim is nan (can happen if the layer act goes to 0 for whatever reason at a given cycle) and set
+	// lay sim to 0 for that cycle. This is important because emergent doesn't like nan values and the gui has issues with plotting slices with nans.
+	if math.IsNaN(sim) {
+		ly.Sim = 0
+	} else {
+		ly.Sim = sim
+	}
+
 }
 
 // InitActAvg initializes the running-average activation values that drive learning.
